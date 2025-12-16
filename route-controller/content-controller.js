@@ -1,5 +1,4 @@
 const scrapeController = require("../scrape-controller/content-controller")
-const slug = req.params.url.trim().toLowerCase()
 const {ROOT_URL} = require("../utils/options")
 
 async function contentController(req, res, next) {
