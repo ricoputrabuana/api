@@ -4,34 +4,28 @@ const { ROOT_URL } = require("../utils/options")
 
 async function scrapeTrending(url) {
     try {
-        const html = await axios.get(url, {
-            timeout: 15000,
-            headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8"
-            }
-        })
-
+        const html = await axios.get(url)
         const $ = cheerio.load(html.data)
-
-        return {
+        const data = {
             date: $(".date-article").text().trim(),
-            title:
-              $("h1#post_title").text().trim() ||
-              $(".title-tag-container").text().trim(),
+            title: $("h1#post_title").text() != "" ? $("h1#post_title").text() : $(".title-tag-container").text(),
             content: getContent($),
             img: getImg($),
             tag: getTag($),
-            doctor: getDoctor($),
-            source: ROOT_URL,
+            doctor: {
+                name: JSON.parse(JSON.stringify($("sources-post")[0].attribs))['doctor-name'],
+                sources: JSON.parse(JSON.stringify($("sources-post")[0].attribs))['sources']
+            },
+            souce: ROOT_URL,
         }
+        // var debugimg = $(".post-content img").attr("src");
+        // console.log(debugimg);
+        // console.log($().find('img').attr('src'));
+        return data
     } catch (err) {
-        console.error("SCRAPE ERROR:", err.message)
         throw Error(err.message)
     }
 }
-
 
 
 function getTag($) {
@@ -43,13 +37,15 @@ function getTag($) {
 }
 
 function getImg($) {
-    const img1 = $("#postContent img").attr("src")
-    if (img1) return img1
-
-    const img2 = $(".post-content img").attr("src")
-    if (img2) return img2
-
-    return null
+    let a = $("#postContent > *:not(div)").length
+    if (a.length > 0) {
+        return ("#postContent img").attr("src")
+    }
+    else {
+        return $(".post-content img").attr("src")
+    }
+    return "no img"
+    // return $("#postContent img").attr("src") != "" ? $("#postContent img").attr("src") : $(".post-content img").attr("src")
 }
 
 function getContent($) {
